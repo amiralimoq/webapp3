@@ -1,333 +1,386 @@
-// ==========================================
-// تنظیمات اتصال به دیتابیس Supabase
-// ==========================================
 const SUPABASE_URL = 'https://ducmehygksmijtynfuzt.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR1Y21laHlna3NtaWp0eW5mdXp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU2NTgyNTQsImV4cCI6MjA4MTIzNDI1NH0.Zo0RTm5fPn-sA6AkqSIPCCiehn8iW2Ou4I26HnC2CfU';
-
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
 
-    // --- 1. مدیریت ناوبری سایدبار (Sidebar Navigation) ---
+    // --- 0. CHECK LOGIN & HEADER USERNAME ---
+    if(sessionStorage.getItem('role') !== 'admin') window.location.href = 'login.html';
+    
+    // دریافت نام ادمین فعلی
+    // (فرض: ما فقط ادمین را با نقش ذخیره کردیم. برای نمایش نام دقیق نیاز است در لاگین نام را ذخیره کنیم. 
+    // اینجا فعلا 'Admin Manager' را پیش فرض میگذاریم یا اگر در سشن ذخیره کردید میخوانیم)
+    // بهتر است در لاگین این را اضافه کنید: sessionStorage.setItem('adminName', user);
+    const adminName = sessionStorage.getItem('adminName') || 'Admin Manager';
+    document.getElementById('header-username').innerText = adminName;
+
+    // --- 1. SIDEBAR & NAVIGATION ---
     const menuItems = document.querySelectorAll('.menu-item:not(.logout)');
     const sections = document.querySelectorAll('.content-section');
 
     menuItems.forEach(item => {
         item.addEventListener('click', () => {
-            // آپدیت کلاس اکتیو منو
             menuItems.forEach(i => i.classList.remove('active'));
             item.classList.add('active');
-
-            // نمایش سکشن مربوطه
             const targetId = item.getAttribute('data-target');
             sections.forEach(sec => sec.classList.remove('active-section'));
             document.getElementById(targetId).classList.add('active-section');
-
-            // بارگذاری دیتا بر اساس تب
-            if(targetId === 'dashboard') loadMonthStats();
-            if(targetId === 'customer-club') loadAllCustomers(); // پیشفرض همه مشتریان
+            
+            // Init Section Data
+            if(targetId === 'dashboard') initDashboard();
+            if(targetId === 'customers') loadAllCustomers();
+            if(targetId === 'sales') quickReport(30); // Default cash report
+            if(targetId === 'users') loadStaffList();
+            if(targetId === 'reviews') loadReviews();
             if(targetId === 'messages') loadMessages();
         });
     });
 
-    // --- خروج (Logout) ---
-    const logoutBtn = document.querySelector('.logout');
-    if(logoutBtn) {
-        logoutBtn.addEventListener('click', () => {
-            if(confirm('Are you sure you want to logout?')) {
-                sessionStorage.clear();
-                window.location.href = 'login.html';
-            }
-        });
+    // --- 2. DASHBOARD LOGIC ---
+    function initDashboard() {
+        // Date Title (1 Dec - Current)
+        const now = new Date();
+        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+        const options = { day: 'numeric', month: 'short' };
+        document.getElementById('dashboard-date-title').innerText = 
+            `${firstDay.toLocaleDateString('en-GB', options)} - ${now.toLocaleDateString('en-GB', options)}`;
+        
+        loadMonthStats();
+        initWorkingHours();
     }
-
-    // ============================================
-    // A. داشبورد: آمار ماهانه (Current Month Stats)
-    // ============================================
+    
     async function loadMonthStats() {
         const now = new Date();
         const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-        const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString();
-
-        // کوئری گرفتن سفارشات ماه جاری که Completed هستند
-        const { data, error } = await supabaseClient
-            .from('orders')
-            .select('total_amount')
-            .eq('status', 'completed')
-            .gte('created_at', firstDay)
-            .lte('created_at', lastDay);
-
-        if (!error && data) {
-            const count = data.length;
-            const revenue = data.reduce((sum, order) => sum + (parseFloat(order.total_amount) || 0), 0);
-            
-            document.getElementById('month-orders').innerText = count;
-            document.getElementById('month-revenue').innerText = '$' + revenue.toLocaleString();
+        const { data } = await supabaseClient.from('orders').select('total_amount').eq('status','completed').gte('created_at', firstDay);
+        if(data) {
+            const rev = data.reduce((a,b)=> a + (parseFloat(b.total_amount)||0), 0);
+            document.getElementById('month-orders').innerText = data.length;
+            document.getElementById('month-revenue').innerText = '$' + rev.toLocaleString();
         }
     }
-    // لود اولیه
-    loadMonthStats();
 
-    // ============================================
-    // B. داشبورد: ساخت ادمین جدید
-    // ============================================
-    const createAdminBtn = document.getElementById('create-admin-btn');
-    if(createAdminBtn) {
-        createAdminBtn.addEventListener('click', async () => {
-            const user = document.getElementById('admin-user').value.trim();
-            const pass = document.getElementById('admin-pass').value.trim();
-            const errorText = document.getElementById('admin-create-error');
-            const successText = document.getElementById('admin-create-success');
-
-            errorText.style.display = 'none';
-            successText.style.display = 'none';
-
-            // اعتبارسنجی: حروف و عدد (عدد اختیاری)
-            const validRegex = /^[a-zA-Z0-9]+$/;
-
-            if(!validRegex.test(user)) {
-                errorText.innerText = "Username: Only letters and numbers allowed.";
-                errorText.style.display = 'block';
-                return;
-            }
-            if(!validRegex.test(pass)) {
-                errorText.innerText = "Password: Only letters and numbers allowed.";
-                errorText.style.display = 'block';
-                return;
-            }
-
-            createAdminBtn.innerText = "Creating...";
-            createAdminBtn.disabled = true;
-
-            const { error } = await supabaseClient
-                .from('admins')
-                .insert([{ username: user, password: pass }]);
-
-            createAdminBtn.innerText = "Create Admin";
-            createAdminBtn.disabled = false;
-
-            if(error) {
-                errorText.innerText = "Error: " + error.message;
-                errorText.style.display = 'block';
-            } else {
-                successText.style.display = 'block';
-                document.getElementById('admin-user').value = '';
-                document.getElementById('admin-pass').value = '';
-            }
-        });
-    }
-
-    // ============================================
-    // C. باشگاه مشتریان (Customer Club)
-    // ============================================
-    window.switchCustomerTab = function(type, tabElement) {
-        // مدیریت استایل تب‌ها
-        document.querySelectorAll('#customer-club .nav-tab').forEach(t => t.classList.remove('active-tab'));
-        tabElement.classList.add('active-tab');
-
+    // --- 3. CUSTOMERS LOGIC ---
+    window.switchCustomerTab = function(type, el) {
+        document.querySelectorAll('#customers .nav-tab').forEach(t => t.classList.remove('active-tab'));
+        el.classList.add('active-tab');
+        
         if(type === 'all') loadAllCustomers();
-        else loadLoyalCustomers();
+        if(type === 'loyal') loadLoyalCustomers();
+        if(type === 'valuable') loadMostValuable();
+        if(type === 'interests') loadInterests();
     }
 
     async function loadAllCustomers() {
-        const list = document.getElementById('customer-list');
-        const header = document.getElementById('customer-header');
+        renderCustomerHeader(['Name', 'Phone', 'Joined']);
+        const { data } = await supabaseClient.from('customers').select('*');
+        renderCustomerList(data, c => `<span>${c.name}</span><span>${c.phone}</span><span style="text-align:right">${new Date(c.created_at).toLocaleDateString()}</span>`);
+    }
+
+    async function loadMostValuable() {
+        renderCustomerHeader(['Name', 'Total Spent (1 Yr)', 'Value (10%)']);
+        // منطق: گرفتن سفارشات ۱ سال اخیر -> جمع کردن برای هر مشتری -> سورت
+        const oneYearAgo = new Date();
+        oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
         
-        // تغییر هدر جدول
-        header.innerHTML = `
-            <span style="flex:1">First Name & Last Name</span>
-            <span style="flex:1">Phone Number</span>
-            <span style="flex:1; text-align:right;">Joined Date</span>
-        `;
-        list.innerHTML = '<p style="padding:15px; color:#aaa;">Loading...</p>';
-
-        const { data, error } = await supabaseClient
-            .from('customers')
-            .select('*')
-            .order('created_at', { ascending: false });
-
-        list.innerHTML = '';
-        if(error || !data.length) {
-            list.innerHTML = '<p style="padding:15px;">No customers found.</p>';
-            return;
-        }
-
-        data.forEach(c => {
-            const date = new Date(c.created_at).toLocaleDateString();
-            list.innerHTML += `
-                <div class="list-row">
-                    <span style="flex:1; font-weight:500;">${c.name}</span>
-                    <span style="flex:1; color:#555;">${c.phone || '-'}</span>
-                    <span style="flex:1; text-align:right; color:#888;">${date}</span>
-                </div>
-            `;
-        });
-    }
-
-    async function loadLoyalCustomers() {
-        const list = document.getElementById('customer-list');
-        const header = document.getElementById('customer-header');
-
-        // تغییر هدر برای مشتریان ثابت
-        header.innerHTML = `
-            <span style="flex:1.5">Customer Info</span>
-            <span style="flex:1">Orders</span>
-            <span style="flex:1; text-align:right;">Total Spent</span>
-        `;
-        list.innerHTML = '<p style="padding:15px; color:#aaa;">Loading Loyal Customers...</p>';
-
-        // استفاده از View که در SQL ساختیم
-        const { data, error } = await supabaseClient
-            .from('loyal_customers_view')
-            .select('*');
-
-        list.innerHTML = '';
-        if(error) {
-            console.error(error);
-            list.innerHTML = '<p style="padding:15px; color:red;">Error loading data.</p>';
-            return;
-        }
-        if(!data || !data.length) {
-            list.innerHTML = '<p style="padding:15px;">No loyal customers yet (>3 orders).</p>';
-            return;
-        }
-
-        data.forEach(c => {
-            list.innerHTML += `
-                <div class="list-row">
-                    <div style="flex:1.5">
-                        <div style="font-weight:600; color:#2A2A2A;">${c.name}</div>
-                        <div style="font-size:12px; color:#888;">${c.phone}</div>
-                    </div>
-                    <span style="flex:1; font-weight:500; color:#FF724C;">${c.order_count} Orders</span>
-                    <span style="flex:1; text-align:right; font-weight:bold;">$${c.total_spent}</span>
-                </div>
-            `;
-        });
-    }
-
-    // ============================================
-    // D. گزارشات فروش (Sales Reports)
-    // ============================================
-    
-    // تابع فیلتر دستی
-    const filterBtn = document.getElementById('filter-report-btn');
-    if(filterBtn) {
-        filterBtn.addEventListener('click', () => {
-            const start = document.getElementById('start-date').value;
-            const end = document.getElementById('end-date').value;
-            if(!start || !end) {
-                alert("Please select both start and end dates.");
-                return;
-            }
-            fetchReport(start, end);
-        });
-    }
-
-    // تابع فیلتر سریع (1 روز، 7 روز و...)
-    window.quickReport = function(days) {
-        const endDate = new Date();
-        const startDate = new Date();
-        startDate.setDate(endDate.getDate() - days);
-
-        fetchReport(startDate.toISOString(), endDate.toISOString());
-    }
-
-    async function fetchReport(startStr, endStr) {
-        // تنظیم زمان دقیق برای پوشش کامل روز آخر
-        const start = new Date(startStr); // 00:00:00
-        const end = new Date(endStr);
-        end.setHours(23, 59, 59, 999); // پایان روز
-
-        const { data, error } = await supabaseClient
+        const { data: orders } = await supabaseClient
             .from('orders')
-            .select('total_amount')
+            .select('customer_id, total_amount, customers(name, phone)')
             .eq('status', 'completed')
-            .gte('created_at', start.toISOString())
-            .lte('created_at', end.toISOString());
+            .gte('created_at', oneYearAgo.toISOString());
 
-        if(!error && data) {
-            const count = data.length;
-            const total = data.reduce((sum, o) => sum + (parseFloat(o.total_amount) || 0), 0);
-            
-            document.getElementById('report-orders').innerText = count;
-            document.getElementById('report-revenue').innerText = '$' + total.toLocaleString();
+        // Group by Customer
+        const customerMap = {};
+        if(orders) {
+            orders.forEach(o => {
+                const cid = o.customer_id;
+                if(!customerMap[cid]) customerMap[cid] = { ...o.customers, total: 0 };
+                customerMap[cid].total += parseFloat(o.total_amount);
+            });
+        }
+
+        const sorted = Object.values(customerMap).sort((a,b) => b.total - a.total);
+        renderCustomerList(sorted, c => `
+            <span>${c.name} <br><small style="color:#aaa">${c.phone}</small></span>
+            <span style="color:#2ECC71; font-weight:bold">$${c.total.toFixed(2)}</span>
+            <span style="text-align:right; font-weight:bold; color:#FF724C;">${(c.total * 0.1).toFixed(1)} Pts</span>
+        `);
+    }
+
+    async function loadInterests() {
+        renderCustomerHeader(['Customer', 'Top 3 Ingredients', 'Fav Food']);
+        // نیاز به join پیچیده دارد، برای سادگی کلاینت‌ساید انجام میدهیم
+        const { data: items } = await supabaseClient
+            .from('order_items')
+            .select('product_name, ingredients, orders(customer_id, customers(name, phone))');
+        
+        const map = {}; // { custId: { name, phone, ingredientsCount: {}, foodCount: {} } }
+        
+        if(items) {
+            items.forEach(item => {
+                if(!item.orders || !item.orders.customers) return;
+                const cid = item.orders.customer_id;
+                const cust = item.orders.customers;
+                
+                if(!map[cid]) map[cid] = { name: cust.name, phone: cust.phone, ings: {}, foods: {} };
+                
+                // Count Food
+                map[cid].foods[item.product_name] = (map[cid].foods[item.product_name] || 0) + 1;
+                
+                // Count Ingredients
+                if(item.ingredients) {
+                    item.ingredients.split(',').forEach(ing => {
+                        const i = ing.trim();
+                        map[cid].ings[i] = (map[cid].ings[i] || 0) + 1;
+                    });
+                }
+            });
+        }
+
+        const list = Object.values(map).map(c => {
+            // Get Top Food
+            const topFood = Object.entries(c.foods).sort((a,b) => b[1]-a[1])[0]?.[0] || '-';
+            // Get Top 3 Ingredients
+            const topIngs = Object.entries(c.ings).sort((a,b) => b[1]-a[1]).slice(0,3).map(x=>x[0]).join(', ');
+            return { ...c, topFood, topIngs };
+        });
+
+        renderCustomerList(list, c => `
+            <span>${c.name}</span>
+            <span style="font-size:12px; color:#555;">${c.topIngs}</span>
+            <span style="text-align:right; color:#FF724C;">${c.topFood}</span>
+        `);
+    }
+
+    function renderCustomerHeader(titles) {
+        document.getElementById('customer-header').innerHTML = titles.map((t,i) => 
+            `<span style="flex:1; ${i===titles.length-1 ? 'text-align:right':''}">${t}</span>`
+        ).join('');
+    }
+    function renderCustomerList(data, templateFn) {
+        const list = document.getElementById('customer-list');
+        list.innerHTML = '';
+        if(!data || !data.length) list.innerHTML = '<p style="padding:15px;color:#aaa">No data found.</p>';
+        else data.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'list-row';
+            div.innerHTML = templateFn(item);
+            list.appendChild(div);
+        });
+    }
+
+    // --- 4. SALES LOGIC ---
+    window.switchSalesMode = function(mode, el) {
+        document.querySelectorAll('#sales .nav-tab').forEach(t => t.classList.remove('active-tab'));
+        el.classList.add('active-tab');
+        document.getElementById('sales-cash-view').style.display = mode === 'cash' ? 'block' : 'none';
+        document.getElementById('sales-product-view').style.display = mode === 'product' ? 'block' : 'none';
+        
+        if(mode === 'product') setProductFilter(7, 'Last 7 Days'); // Default
+    }
+
+    // Product Filter Logic (Chips)
+    window.setProductFilter = async function(val, label) {
+        document.querySelector('#chip-prod-range .val').innerText = label;
+        closeAllChips();
+        
+        let startDate = new Date();
+        let endDate = new Date();
+
+        if (typeof val === 'number') {
+            startDate.setDate(endDate.getDate() - val);
         } else {
-            console.error(error);
-        }
-    }
-
-    // ============================================
-    // E. پیام‌ها (Messages)
-    // ============================================
-    async function loadMessages() {
-        const container = document.getElementById('messages-container');
-        container.innerHTML = '<p style="padding:15px; color:#aaa;">Loading...</p>';
-
-        const { data, error } = await supabaseClient
-            .from('messages')
-            .select('*')
-            .order('created_at', { ascending: false });
-
-        container.innerHTML = '';
-        if(error || !data.length) {
-            container.innerHTML = '<p style="padding:15px;">No messages.</p>';
-            return;
+            // Seasonal Logic
+            const year = endDate.getFullYear();
+            if(val === 'Spring') { startDate = new Date(year, 2, 21); endDate = new Date(year, 5, 21); }
+            if(val === 'Summer') { startDate = new Date(year, 5, 22); endDate = new Date(year, 8, 22); }
+            if(val === 'Autumn') { startDate = new Date(year, 8, 23); endDate = new Date(year, 11, 21); }
+            if(val === 'Winter') { startDate = new Date(year, 11, 22); endDate = new Date(year+1, 2, 20); }
         }
 
-        data.forEach(msg => {
-            const time = new Date(msg.created_at).toLocaleString();
-            container.innerHTML += `
-                <div class="list-row" style="flex-direction:column; align-items:flex-start; gap:5px;">
-                    <div style="display:flex; justify-content:space-between; width:100%;">
-                        <span style="font-weight:700; color:#FF724C;">${msg.title}</span>
-                        <span style="font-size:11px; color:#aaa;">${time}</span>
-                    </div>
-                    <p style="font-size:13px; color:#555; margin:0;">${msg.body}</p>
-                </div>
-            `;
-        });
-    }
+        const { data } = await supabaseClient
+            .from('order_items')
+            .select('product_name, final_price, quantity')
+            .gte('created_at', startDate.toISOString())
+            .lte('created_at', endDate.toISOString());
 
-    // ============================================
-    // F. مدیریت کارکنان (کد قبلی شما - برای اینکه پاک نشود)
-    // ============================================
-    loadStaffList();
-    const createStaffBtn = document.getElementById('create-btn');
-    if (createStaffBtn) {
-        createStaffBtn.addEventListener('click', async () => {
-            const u = document.getElementById('new-user').value;
-            const p = document.getElementById('new-pass').value;
-            // ساده‌سازی شده برای جلوگیری از تداخل با کدهای جدید
-            if(u && p) {
-                await supabaseClient.from('staff').insert([{ username: u, password: p }]);
-                loadStaffList();
-                document.getElementById('new-user').value = '';
-                document.getElementById('new-pass').value = '';
-                document.getElementById('staff-success').style.display = 'block';
-            }
-        });
-    }
-
-    async function loadStaffList() {
-        const c = document.getElementById('staff-container');
-        if(!c) return;
-        const { data } = await supabaseClient.from('staff').select('*');
+        const list = document.getElementById('product-list');
+        list.innerHTML = '';
+        
         if(data) {
-            c.innerHTML = '';
-            data.forEach(user => {
-                c.innerHTML += `
-                <div class="staff-item">
-                    <span>${user.username}</span>
-                    <button class="btn-action btn-delete" onclick="deleteUser(${user.id})">Delete</button>
+            const stats = {};
+            data.forEach(i => {
+                if(!stats[i.product_name]) stats[i.product_name] = { qty: 0, total: 0 };
+                stats[i.product_name].qty += i.quantity;
+                stats[i.product_name].total += (i.final_price * i.quantity);
+            });
+            
+            Object.entries(stats).forEach(([name, stat]) => {
+                list.innerHTML += `
+                    <div class="list-row">
+                        <span style="flex:2; font-weight:500;">${name}</span>
+                        <span style="flex:1">${stat.qty}</span>
+                        <span style="flex:1; text-align:right; font-weight:bold;">$${stat.total.toFixed(2)}</span>
+                    </div>`;
+            });
+        }
+    }
+
+    // --- 5. USERS MANAGEMENT ---
+    window.switchUserTab = function(type, el) {
+        document.querySelectorAll('#users .nav-tab').forEach(t => t.classList.remove('active-tab'));
+        el.classList.add('active-tab');
+        if(type === 'staff') loadStaffList();
+        else loadAdminList();
+    }
+    
+    async function loadStaffList() {
+        const list = document.getElementById('users-list');
+        list.innerHTML = '...';
+        const { data } = await supabaseClient.from('staff').select('*');
+        list.innerHTML = '';
+        data.forEach(u => {
+            list.innerHTML += `
+            <div class="list-row">
+                <span style="flex:1">${u.username}</span>
+                <span style="flex:1; text-align:right; display:flex; justify-content:flex-end; gap:10px;">
+                    <button class="btn-action btn-reset" onclick="changePass('staff', ${u.id})">New Pass</button>
+                    <button class="btn-action btn-delete" onclick="deleteUser('staff', ${u.id})">Delete</button>
+                </span>
+            </div>`;
+        });
+    }
+
+    async function loadAdminList() {
+        const list = document.getElementById('users-list');
+        list.innerHTML = '...';
+        const { data } = await supabaseClient.from('admins').select('*');
+        list.innerHTML = '';
+        data.forEach(u => {
+            list.innerHTML += `
+            <div class="list-row">
+                <span style="flex:1; font-weight:bold;">${u.username}</span>
+                <span style="flex:1; text-align:right; display:flex; justify-content:flex-end; gap:10px;">
+                     <button class="btn-action btn-delete" onclick="deleteUser('admins', ${u.id})">Delete</button>
+                </span>
+            </div>`;
+        });
+    }
+
+    window.changePass = async (table, id) => {
+        const newP = prompt("Enter new password:");
+        if(newP) {
+            await supabaseClient.from(table).update({password: newP}).eq('id', id);
+            alert("Password updated.");
+        }
+    }
+    window.deleteUser = async (table, id) => {
+        if(confirm("Delete user?")) {
+            await supabaseClient.from(table).delete().eq('id', id);
+            if(table==='staff') loadStaffList(); else loadAdminList();
+        }
+    }
+
+    // --- 6. REVIEWS & SETTINGS ---
+    let notifEnabled = false;
+    let soundEnabled = true;
+
+    async function loadReviews() {
+        const { data } = await supabaseClient.from('reviews').select('*').order('created_at', {ascending:false});
+        const container = document.getElementById('reviews-container');
+        container.innerHTML = '';
+        if(data) {
+            data.forEach(r => {
+                container.innerHTML += `
+                <div class="review-card">
+                    <div class="review-header">
+                        <strong>${r.customer_name}</strong>
+                        <div class="star-rating">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</div>
+                    </div>
+                    <p style="font-size:13px; color:#555; margin:0;">${r.comment}</p>
                 </div>`;
             });
         }
     }
-    window.deleteUser = async (id) => {
-        if(confirm('Delete?')) {
-            await supabaseClient.from('staff').delete().eq('id', id);
-            loadStaffList();
+
+    window.toggleNotifSetting = () => {
+        notifEnabled = !notifEnabled;
+        document.getElementById('notif-state').innerText = notifEnabled ? 'ON' : 'OFF';
+        document.getElementById('sound-btn').style.display = notifEnabled ? 'flex' : 'none';
+        document.getElementById('notif-btn').classList.toggle('active-chip', notifEnabled);
+    }
+    window.toggleSoundSetting = () => {
+        soundEnabled = !soundEnabled;
+        document.getElementById('sound-state').innerText = soundEnabled ? 'ON' : 'OFF';
+        if(soundEnabled) document.getElementById('notif-sound').play();
+    }
+
+    // --- 7. CHIP DROPDOWNS (Generic) ---
+    const workingHoursData = {
+        start: Array.from({length:24}, (_,i)=> `${i.toString().padStart(2,'0')}:00`),
+        days: ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']
+    };
+
+    function initWorkingHours() {
+        fillMenu('menu-start-time', workingHoursData.start, 'start-time');
+        fillMenu('menu-end-time', workingHoursData.start, 'end-time');
+        fillMenu('menu-start-day', workingHoursData.days, 'start-day');
+        fillMenu('menu-end-day', workingHoursData.days, 'end-day');
+    }
+
+    function fillMenu(id, items, type) {
+        const menu = document.getElementById(id);
+        items.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'chip-option';
+            div.innerText = item;
+            div.onclick = () => {
+                document.querySelector(`#chip-${type} .val`).innerText = item;
+                closeAllChips();
+            };
+            menu.appendChild(div);
+        });
+    }
+
+    window.toggleChip = (type) => {
+        const menu = document.getElementById(`menu-${type}`);
+        const isVisible = menu.classList.contains('show');
+        closeAllChips();
+        if(!isVisible) menu.classList.add('show');
+    }
+
+    function closeAllChips() {
+        document.querySelectorAll('.chip-menu').forEach(m => m.classList.remove('show'));
+    }
+
+    // --- 8. PROFILE MODAL ---
+    const modal = document.getElementById('profile-modal');
+    document.getElementById('profile-trigger').onclick = () => {
+        modal.style.display = 'flex';
+        document.getElementById('edit-self-user').value = document.getElementById('header-username').innerText;
+    };
+    
+    document.getElementById('save-profile-btn').onclick = async () => {
+        const newU = document.getElementById('edit-self-user').value;
+        const newP = document.getElementById('edit-self-pass').value;
+        
+        // This requires identifying the current admin ID. 
+        // For prototype, we update based on current username
+        const currentName = document.getElementById('header-username').innerText;
+        
+        const { error } = await supabaseClient.from('admins').update({username: newU, password: newP}).eq('username', currentName);
+        
+        if(!error) {
+            alert("Profile updated! Please login again.");
+            window.location.href = 'login.html';
+        } else {
+            alert("Error: " + error.message);
         }
+    };
+    
+    // Close modal on outside click
+    window.onclick = (e) => {
+        if (!e.target.closest('.chip-dropdown')) closeAllChips();
+        if (e.target == modal) modal.style.display = 'none';
     }
 });
