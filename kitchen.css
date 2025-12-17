@@ -1,0 +1,303 @@
+:root {
+    --primary-color: #FF724C; /* رنگ نارنجی اصلی */
+    --bg-color: #F8F9FD;
+    --sidebar-bg: #FFFFFF;
+    --text-dark: #2A2A2A;
+    --text-grey: #8D91A0;
+    --card-shadow: 0 10px 40px rgba(0,0,0,0.03);
+    --radius: 24px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+body {
+    background-color: #E0E0E0; /* پس‌زمینه کلی تیره‌تر */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+/* کانتینر اصلی داشبورد */
+.dashboard-container {
+    width: 100%;
+    max-width: 1400px;
+    background-color: var(--bg-color);
+    border-radius: 40px;
+    display: flex;
+    overflow: hidden;
+    height: 90vh;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+}
+
+/* --- سایدبار --- */
+.sidebar {
+    width: 260px;
+    background: var(--sidebar-bg);
+    padding: 40px 30px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.logo {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--text-dark);
+    text-align: center;
+    margin-bottom: 50px;
+    position: relative;
+}
+
+.logo span { color: var(--primary-color); }
+
+/* لبخند زیر لوگو */
+.logo::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 20px;
+    border-bottom: 4px solid var(--primary-color);
+    border-radius: 50%;
+}
+
+.menu-list { list-style: none; }
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    color: var(--text-grey);
+    font-weight: 500;
+    font-size: 14px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: 0.3s;
+    border-radius: 16px;
+}
+
+.menu-item i {
+    font-size: 20px;
+    margin-right: 15px;
+}
+
+.menu-item.active {
+    color: var(--primary-color);
+    background-color: #FFF0EB; /* پس‌زمینه کمرنگ نارنجی */
+    border: 1px solid #FFE0D5;
+}
+
+.menu-item:hover:not(.active) {
+    background-color: #f5f5f5;
+    color: var(--text-dark);
+}
+
+.logout {
+    color: var(--text-dark);
+    font-weight: 600;
+    margin-top: auto;
+}
+
+/* --- محتوای اصلی --- */
+.main-content {
+    flex: 1;
+    padding: 40px;
+    overflow-y: auto;
+}
+
+/* هدر بالا */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.search-bar {
+    background: #FFFFFF;
+    padding: 12px 20px;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    width: 300px;
+    box-shadow: var(--card-shadow);
+}
+
+.search-bar input {
+    border: none;
+    outline: none;
+    margin-left: 10px;
+    width: 100%;
+    font-size: 14px;
+}
+
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.user-img {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background-color: #ddd;
+    background-image: url('https://i.pravatar.cc/150?img=5'); /* آواتار رندوم */
+    background-size: cover;
+}
+
+/* لیست تب‌های وضعیت سفارش */
+.status-tabs {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 30px;
+    overflow-x: auto;
+    padding-bottom: 10px;
+}
+
+/* استایل اسکرول بار برای تب‌ها */
+.status-tabs::-webkit-scrollbar {
+    height: 4px;
+}
+.status-tabs::-webkit-scrollbar-thumb {
+    background: #ddd;
+    border-radius: 10px;
+}
+
+.tab {
+    background: white;
+    padding: 10px 25px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #ccc;
+    min-width: 80px;
+    text-align: center;
+    position: relative;
+    box-shadow: var(--card-shadow);
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.tab:hover { transform: translateY(-2px); }
+
+/* رنگ‌های بالای تب‌ها */
+.tab.green { border-top: 3px solid #2ECC71; color: #2ECC71; }
+.tab.red { border-top: 3px solid #FF7675; color: #FF7675; }
+.tab.orange { border-top: 3px solid #FDCB6E; color: #FDCB6E; }
+
+/* --- گرید کارت‌ها --- */
+.order-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 25px;
+}
+
+/* کارت سفارش */
+.card {
+    background: white;
+    border-radius: var(--radius);
+    padding: 25px;
+    box-shadow: var(--card-shadow);
+    transition: transform 0.2s;
+}
+
+.card:hover { transform: translateY(-5px); }
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.order-id { font-weight: 700; color: var(--text-dark); }
+.order-time { font-size: 12px; color: var(--text-grey); margin-top: 4px; }
+
+.customer-avatar {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background-size: cover;
+}
+
+/* آیتم‌های داخل کارت */
+.card-item {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.food-img {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: #eee;
+    object-fit: cover;
+}
+
+.food-info h4 { font-size: 14px; color: var(--text-dark); }
+.food-info p { font-size: 11px; color: var(--text-grey); margin: 4px 0; }
+
+.price-qty {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    font-weight: 600;
+    width: 160px;
+    margin-top: 5px;
+}
+
+/* فوتر کارت */
+.card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 15px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.total-price {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+.total-label { font-size: 10px; color: var(--text-grey); }
+
+.actions { display: flex; gap: 10px; }
+
+.btn-icon {
+    width: 35px;
+    height: 35px;
+    border-radius: 10px;
+    border: 1px solid #eee;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn-icon:hover { opacity: 0.8; }
+
+.btn-check { color: #2ECC71; background: #E9FBF0; border: none; }
+.btn-close { color: #FF7675; background: #FFF0F0; border: none; }
+
+.status-badge {
+    padding: 8px 15px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.badge-rejected { color: #FF7675; background: #FFF0F0; border: 1px solid #FFE5E5; }
+.badge-completed { color: #2ECC71; background: #E9FBF0; border: 1px solid #D5F5E0; }

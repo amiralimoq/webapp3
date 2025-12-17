@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- 1. LOAD SUPABASE LIBRARY FIRST IN HEAD -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body { font-family: 'Poppins', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f4f5f7; margin: 0; }
+        .login-card { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); width: 100%; max-width: 400px; text-align: center; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; outline: none; }
+        input:focus { border-color: #FF724C; }
+        button { width: 100%; padding: 12px; background-color: #FF724C; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600; margin-top: 10px; transition: 0.3s; }
+        button:hover { background-color: #e05530; }
+        button:disabled { background-color: #ccc; cursor: not-allowed; }
+        #error-msg { color: #ff4757; font-size: 13px; margin-bottom: 15px; display: none; background: #ffebeb; padding: 8px; border-radius: 8px; }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <h2 style="color: #333;">Welcome Back</h2>
+        <p style="color: #888; margin-bottom: 30px;">Login to your dashboard</p>
+        
+        <p id="error-msg"></p>
+
+        <input type="text" id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Password">
+        
+        <button id="login-btn" onclick="handleLogin()">Login to System</button>
+    </div>
+
+    <!-- 2. YOUR LOGIC SCRIPT AT THE END -->
+    <script>
+        // Supabase Config
+        const SUPABASE_URL = 'https://ducmehygksmijtynfuzt.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR1Y21laHlna3NtaWp0eW5mdXp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU2NTgyNTQsImV4cCI6MjA4MTIzNDI1NH0.Zo0RTm5fPn-sA6AkqSIPCCiehn8iW2Ou4I26HnC2CfU';
+        
+        // Initialize Client
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        async function handleLogin() {
+            const user = document.getElementById('username').value.trim();
+            const pass = document.getElementById('password').value.trim();
+            const errorMsg = document.getElementById('error-msg');
+            const btn = document.getElementById('login-btn');
+
+            errorMsg.style.display = 'none';
+
+            if(!user || !pass) {
+                errorMsg.innerText = "Please fill all fields.";
+                errorMsg.style.display = 'block';
+                return;
+            }
+
+            // Bypass for Admin (Emergency Login)
+            if (user.toLowerCase() === 'admin' && pass === '12345') {
+                sessionStorage.setItem('role', 'admin');
+                window.location.href = 'admin.html';
+                return; 
+            }
+
+            btn.innerText = "Verifying...";
+            btn.disabled = true;
+
+            try {
+                // Call Database Function
+                const { data, error } = await supabaseClient.rpc('check_credentials', {
+                    my_username: user,
+                    my_password: pass
+                });
+
+                if (error) throw error;
+
+                if (data === 'admin') {
+                    sessionStorage.setItem('role', 'admin');
+                    window.location.href = 'admin.html';
+                } 
+                else if (data === 'kitchen') {
+                    sessionStorage.setItem('role', 'kitchen');
+                    sessionStorage.setItem('isLoggedIn', 'true');
+                    window.location.href = 'kitchen.html';
+                } 
+                else {
+                    errorMsg.innerText = "Invalid Username or Password!";
+                    errorMsg.style.display = 'block';
+                }
+
+            } catch (err) {
+                console.error("Login Error:", err);
+                errorMsg.innerText = "Connection Error: " + (err.message || "Please check console");
+                errorMsg.style.display = 'block';
+            } finally {
+                btn.innerText = "Login to System";
+                btn.disabled = false;
+            }
+        }
+
+        // Enter Key Support
+        document.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') handleLogin();
+        });
+    </script>
+</body>
+</html>

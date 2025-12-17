@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant Menu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
+    <!-- لینک به فایل استایل منو -->
+    <link rel="stylesheet" href="menu.css">
+</head>
+<body>
+
+    <div class="dashboard-container">
+        <!-- Sidebar (مشابه فایل اصلی) -->
+        <aside class="sidebar">
+            <div>
+                <div class="logo">food</div>
+                <ul class="menu-list">
+                    <li class="menu-item">
+                        <i class="ri-home-4-line"></i> Home
+                    </li>
+                    <li class="menu-item">
+                        <i class="ri-history-line"></i> Order History
+                    </li>
+                    <li class="menu-item">
+                        <i class="ri-mail-line"></i> Messages
+                    </li>
+                    <li class="menu-item">
+                        <i class="ri-bar-chart-line"></i> Statistics
+                    </li>
+                    <!-- منو محصولات فعال است -->
+                    <li class="menu-item active">
+                        <i class="ri-archive-line"></i> Products
+                    </li>
+                    <li class="menu-item">
+                        <i class="ri-settings-3-line"></i> Settings
+                    </li>
+                </ul>
+            </div>
+            <div class="menu-item logout">
+                <i class="ri-logout-box-r-line"></i> Logout
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="search-bar">
+                    <i class="ri-search-line" style="color: #aaa;"></i>
+                    <input type="text" placeholder="Search menu...">
+                </div>
+                <div class="user-profile">
+                    <div class="cart-btn">
+                        <i class="ri-shopping-bag-3-line"></i>
+                        <span class="badge">2</span>
+                    </div>
+                    <div class="user-img"></div>
+                </div>
+            </header>
+
+            <div class="page-title">
+                <h3>Our Delicious Menu</h3>
+                <p>Choose from our best selection of food</p>
+            </div>
+
+            <!-- Categories / Tabs -->
+            <div class="status-tabs menu-categories">
+                <div class="tab active-cat"><i class="ri-apps-line"></i> All</div>
+                <div class="tab"><i class="ri-goblet-line"></i> Drinks</div>
+                <div class="tab"><i class="ri-restaurant-line"></i> Burger</div>
+                <div class="tab"><i class="ri-cake-3-line"></i> Dessert</div>
+                <div class="tab"><i class="ri-fire-line"></i> Pizza</div>
+            </div>
+
+            <!-- Menu Grid -->
+            <div class="menu-grid">
+
+                <!-- Menu Item 1 -->
+                <div class="menu-card">
+                    <div class="menu-img-container">
+                        <img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&q=80" alt="Burger">
+                        <span class="discount-tag">15% Off</span>
+                    </div>
+                    <div class="menu-details">
+                        <div class="menu-header">
+                            <h4>Cheesy Burger</h4>
+                            <span class="rating"><i class="ri-star-fill"></i> 4.8</span>
+                        </div>
+                        <p class="menu-desc">Beef patty, cheddar cheese, lettuce, tomato</p>
+                        <div class="menu-footer">
+                            <div class="price">$12.50</div>
+                            <button class="btn-add"><i class="ri-add-line"></i> Add</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Menu Item 2 -->
+                <div class="menu-card">
+                    <div class="menu-img-container">
+                        <img src="https://images.unsplash.com/photo-1513104890138-7c749659a591?w=500&q=80" alt="Pizza">
+                    </div>
+                    <div class="menu-details">
+                        <div class="menu-header">
+                            <h4>Pepperoni Pizza</h4>
+                            <span class="rating"><i class="ri-star-fill"></i> 4.5</span>
+                        </div>
+                        <p class="menu-desc">Spicy pepperoni, mozzarella, tomato sauce</p>
+                        <div class="menu-footer">
+                            <div class="price">$18.00</div>
+                            <button class="btn-add"><i class="ri-add-line"></i> Add</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Menu Item 3 -->
+                <div class="menu-card">
+                    <div class="menu-img-container">
+                        <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&q=80" alt="Salad">
+                    </div>
+                    <div class="menu-details">
+                        <div class="menu-header">
+                            <h4>Veggie Bowl</h4>
+                            <span class="rating"><i class="ri-star-fill"></i> 4.9</span>
+                        </div>
+                        <p class="menu-desc">Healthy mix of green vegetables and eggs</p>
+                        <div class="menu-footer">
+                            <div class="price">$9.30</div>
+                            <button class="btn-add"><i class="ri-add-line"></i> Add</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Menu Item 4 -->
+                <div class="menu-card">
+                    <div class="menu-img-container">
+                        <img src="https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=500&q=80" alt="Salad">
+                    </div>
+                    <div class="menu-details">
+                        <div class="menu-header">
+                            <h4>Fresh Salad</h4>
+                            <span class="rating"><i class="ri-star-fill"></i> 4.2</span>
+                        </div>
+                        <p class="menu-desc">Fresh corn, tomato, lettuce mix</p>
+                        <div class="menu-footer">
+                            <div class="price">$10.50</div>
+                            <button class="btn-add"><i class="ri-add-line"></i> Add</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Menu Item 5 -->
+                <div class="menu-card">
+                    <div class="menu-img-container">
+                        <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=500&q=80" alt="Pizza">
+                    </div>
+                    <div class="menu-details">
+                        <div class="menu-header">
+                            <h4>Mushroom Pizza</h4>
+                            <span class="rating"><i class="ri-star-fill"></i> 4.7</span>
+                        </div>
+                        <p class="menu-desc">Wild mushrooms, truffle oil, cheese</p>
+                        <div class="menu-footer">
+                            <div class="price">$22.00</div>
+                            <button class="btn-add"><i class="ri-add-line"></i> Add</button>
+                        </div>
+                    </div>
+                </div>
+
+                 <!-- Menu Item 6 -->
+                 <div class="menu-card">
+                    <div class="menu-img-container">
+                        <img src="https://images.unsplash.com/photo-1482049016688-2d3e1b311543?w=500&q=80" alt="Toast">
+                    </div>
+                    <div class="menu-details">
+                        <div class="menu-header">
+                            <h4>Egg Toast</h4>
+                            <span class="rating"><i class="ri-star-fill"></i> 4.6</span>
+                        </div>
+                        <p class="menu-desc">Avocado, poached egg on toast</p>
+                        <div class="menu-footer">
+                            <div class="price">$8.50</div>
+                            <button class="btn-add"><i class="ri-add-line"></i> Add</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+    <script src="menu.js"></script>
+</body>
+</html>

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+    // چک کردن وضعیت لاگین
+    // اگر کاربر لاگین نکرده باشد، او را به صفحه لاگین پرت می‌کند
+    if (sessionStorage.getItem('isLoggedIn') !== 'true') {
+        window.location.href = 'login.html';
+    }
+</script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Food Dashboard UI</title>
+    <!-- لینک به فونت گوگل Poppins -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- لینک به آیکون‌های RemixIcon -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
+    <!-- لینک به فایل استایل جداگانه -->
+    <link rel="stylesheet" href="kitchen.css">
+</head>
+<body>
+
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div>
+                <div class="logo">food</div>
+                <ul class="menu-list">
+                    <li class="menu-item active">
+                        <i class="ri-home-4-line"></i> Home
+                    </li>
+                    <li class="menu-item">
+                        <i class="ri-history-line"></i> Order History
+                    </li>
+                    <li class="menu-item">
+                        <i class="ri-mail-line"></i> Messages
+                    </li>
+                    <li class="menu-item">
+                        <i class="ri-bar-chart-line"></i> Statistics
+                    </li>
+                    <li class="menu-item">
+                        <i class="ri-archive-line"></i> Products
+                    </li>
+                    <li class="menu-item">
+                        <i class="ri-settings-3-line"></i> Settings
+                    </li>
+                </ul>
+            </div>
+            <div class="menu-item logout">
+                <i class="ri-logout-box-r-line"></i> Logout
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="search-bar">
+                    <i class="ri-search-line" style="color: #aaa;"></i>
+                    <input type="text" placeholder="Search">
+                </div>
+                <div class="user-profile">
+                    <i class="ri-notification-3-line" style="font-size: 20px;"></i>
+                    <div class="user-img"></div>
+                </div>
+            </header>
+
+            <h3 style="margin-bottom: 15px;">Order List</h3>
+
+            <!-- Status Tabs -->
+            <div class="status-tabs">
+                <div class="tab green"><i class="ri-check-line"></i> #345</div>
+                <div class="tab red"><i class="ri-close-line"></i> #346</div>
+                <div class="tab green"><i class="ri-check-line"></i> #347</div>
+                <div class="tab green"><i class="ri-check-line"></i> #348</div>
+                <div class="tab orange">#351</div>
+                <div class="tab">#352</div>
+                <div class="tab">#353</div>
+            </div>
+
+            <!-- Cards Grid -->
+            <div class="order-grid">
+
+                <!-- Card 1 (Pending) -->
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <div class="order-id">Order #351</div>
+                            <div class="order-time">23 Feb 2021, 08:28 PM</div>
+                        </div>
+                        <div class="customer-avatar" style="background-image: url('https://i.pravatar.cc/150?img=11');"></div>
+                    </div>
+
+                    <!-- Item 1 -->
+                    <div class="card-item">
+                        <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100&q=80" class="food-img" alt="food">
+                        <div class="food-info">
+                            <h4>Vegetable Mixups</h4>
+                            <p>Vegetable Fritters with Egg</p>
+                            <div class="price-qty">
+                                <span>$5.30</span>
+                                <span>Qty: 1</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Item 2 -->
+                    <div class="card-item">
+                        <img src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=100&q=80" class="food-img" alt="food">
+                        <div class="food-info">
+                            <h4>Prawn Mix Salad</h4>
+                            <p>Fresh Prawn mix salad</p>
+                            <div class="price-qty">
+                                <span>$5.30</span>
+                                <span>Qty: 1</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-footer">
+                        <div>
+                            <div class="total-label">x2 Items</div>
+                            <div class="total-price">$10.60</div>
+                        </div>
+                        <div class="actions">
+                            <div class="btn-icon btn-close"><i class="ri-close-line"></i></div>
+                            <div class="btn-icon btn-check"><i class="ri-check-line"></i></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2 (Rejected) -->
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <div class="order-id">Order #350</div>
+                            <div class="order-time">23 Feb 2021, 07:28 PM</div>
+                        </div>
+                        <div class="customer-avatar" style="background-image: url('https://i.pravatar.cc/150?img=33');"></div>
+                    </div>
+
+                    <div class="card-item">
+                        <img src="https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=100&q=80" class="food-img" alt="food">
+                        <div class="food-info">
+                            <h4>Fresh Meat</h4>
+                            <p>Fresh meat with salad</p>
+                            <div class="price-qty">
+                                <span>$25.30</span>
+                                <span>Qty: 1</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-item">
+                        <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100&q=80" class="food-img" alt="food">
+                        <div class="food-info">
+                            <h4>Vegetable Mixups</h4>
+                            <p>Vegetable Fritters with Egg</p>
+                            <div class="price-qty">
+                                <span>$5.30</span>
+                                <span>Qty: 1</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-footer">
+                        <div>
+                            <div class="total-label">x2 Items</div>
+                            <div class="total-price">$30.60</div>
+                        </div>
+                        <div class="status-badge badge-rejected">
+                            <i class="ri-close-line"></i> REJECTED
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3 (Completed) -->
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <div class="order-id">Order #349</div>
+                            <div class="order-time">23 Feb 2021, 08:28 PM</div>
+                        </div>
+                        <div class="customer-avatar" style="background-image: url('https://i.pravatar.cc/150?img=68');"></div>
+                    </div>
+
+                    <div class="card-item">
+                        <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100&q=80" class="food-img" alt="food">
+                        <div class="food-info">
+                            <h4>Vegetable Mixups</h4>
+                            <p>Vegetable Fritters with Egg</p>
+                            <div class="price-qty">
+                                <span>$5.30</span>
+                                <span>Qty: 1</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-item">
+                        <img src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=100&q=80" class="food-img" alt="food">
+                        <div class="food-info">
+                            <h4>Prawn Mix Salad</h4>
+                            <p>Fresh Prawn mix salad</p>
+                            <div class="price-qty">
+                                <span>$5.30</span>
+                                <span>Qty: 1</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-footer">
+                        <div>
+                            <div class="total-label">x2 Items</div>
+                            <div class="total-price">$10.60</div>
+                        </div>
+                         <div class="status-badge badge-completed">
+                            <i class="ri-check-line"></i> COMPLETED
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+    <script src="kitchen.js"></script>
+</body>
+</html>
